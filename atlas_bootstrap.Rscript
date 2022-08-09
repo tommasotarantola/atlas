@@ -1,0 +1,95 @@
+# ATLAS BOOTSTRAP
+# -------------------------------------------------------------------------------
+typeline <- function(msg = "Enter some text: ") {
+  if (interactive() ) {
+    txt <- readline(msg)
+  } else {
+    cat(msg);
+    txt <- readLines("stdin",n=1);
+  }
+  return(txt)
+}
+# -------------------------------------------------------------------------------
+run <- TRUE
+cat("-------------------- ATLAS --------------------\n\n")
+cat(paste0("Folder: ",getwd(), "\n\n"))
+typeline("Welcome in Atlas.\n\nFirst of all we have to load the external libraries. If a library is not found it will be automatically downloaded.\nPress enter to continue... ")
+
+while(run){
+  cat("\n\n\n---------------------------------------------\n")
+  cat("> LOADING PACKAGES --------------------------\n\n")
+  pkg_list <- c("shiny",
+                "shinydashboard",
+                "shinyFeedback",
+                "shinyjs",
+                "shinycssloaders",
+                "DT",
+                "qdap",
+                "tidytext",
+                "fuzzyjoin",
+                "tidyverse",
+                "textreadr",
+                "textstem"
+
+  )
+  connection <- TRUE
+  for(i in 1:length(pkg_list)){
+    tryCatch({
+      cat(paste0("Loading: ", pkg_list[i], "\n"))
+      suppressMessages(do.call("library", c(list(pkg_list[i]), warn.conflicts = FALSE, quietly=TRUE)))
+    },
+    error = function(err){
+      cat(paste0("\tPackage: ", pkg_list[i], " not found.\n"))
+      cat(paste0("\tInstalling: ", pkg_list[i], "\n"))
+      tryCatch({
+        suppressMessages(install.packages(pkg_list[i], dependencies = TRUE, 
+                         repos = "http://cran.us.r-project.org"))
+        cat(paste0("\nLoading: ", pkg_list[i], "\n"))
+        suppressMessages(do.call("library", c(list(pkg_list[i]), warn.conflicts = FALSE, quietly=TRUE)))  
+      },
+      error = function(err){
+        connection <<- FALSE
+        cat(paste0("Download of: ", pkg_list[i], " failed.\n"))
+        cat("Please check your internet connection.\n")
+        
+      })
+    })
+    if(!connection) break
+  }
+  if(connection){
+    tryCatch({
+      cat("\n\n\n-----------------------------------------------\n")
+      cat("> LAUNCHING APP -------------------------------\n\n")
+
+      suppressMessages(runApp(
+        appDir = getwd(),
+        port = getOption("shiny.port"),
+        launch.browser = TRUE,
+        host = getOption("shiny.host", "127.0.0.1"),
+        workerId = "",
+        quiet = FALSE,
+        display.mode = c("auto", "normal", "showcase"),
+        test.mode = getOption("shiny.testmode", FALSE)))
+    },
+    error = function(err){
+      print("Somenthing went wrong")  
+    })
+  }
+  user_answer <- FALSE
+  while(!user_answer){
+    run <- typeline("Do you want to try again? (Y, N)")
+    run <- switch(toupper(run),
+                         "Y" = {
+                          user_answer <- TRUE
+                          TRUE
+                         },
+                         "N" = {
+                          user_answer <- TRUE
+                          FALSE
+                         },
+                         print("Unknown answer"))
+  }
+}
+cat("--------------------- END ---------------------\n")
+Sys.sleep(3600)
+
